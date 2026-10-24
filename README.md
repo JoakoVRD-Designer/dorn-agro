@@ -50,6 +50,23 @@ flowchart LR
   W <--> C[Open-Meteo<br/>pronóstico]
 ```
 
+## Decisiones técnicas
+
+- **Comandos firmados en vez de confiar en el broker.** Las credenciales MQTT viajan en la web y en el
+  firmware, así que se asume que alguien puede publicar en el servidor. Por eso la placa solo obedece
+  órdenes firmadas con HMAC-SHA256 con la clave de *su* equipo; el reto que cambia y un id único por orden impiden repetir una
+  orden capturada.
+- **Las reglas de riego viven en la placa.** Si se cae internet o se cierra la app, el campo se sigue
+  regando; la app solo las edita. Las protecciones (sobrecorriente, batería, tiempo máximo) también son
+  locales, porque un corte no puede depender de la red.
+- **Sin framework en la web.** JavaScript moderno con módulos y sin paso de compilación para desarrollar;
+  esbuild solo minifica para publicar. La app pesa poco, carga rápido en celulares de gama baja y
+  funciona sin conexión gracias al *service worker*.
+- **La IA nunca deja a la persona sin respuesta.** Si un proveedor falla, el router pasa al siguiente y,
+  al final, a reglas locales que igual leen sensores y accionan el relé.
+- **Demo con la misma interfaz que el equipo real.** El simulador implementa la misma clase que la
+  conexión MQTT, así que la demo recorre el mismo código de la app y no una maqueta aparte.
+
 ## Resultados medidos
 
 - Orden desde la web hasta el equipo y su confirmación: **0,25 s** en promedio.
@@ -62,3 +79,16 @@ Aquí está la versión **compilada** que publica GitHub Pages. El código fuent
 documentación técnica están en un repositorio privado; puedo mostrarlos en una entrevista.
 
 Proyecto de **[@JoakoVRD-Designer](https://github.com/JoakoVRD-Designer)**.
+
+---
+
+### In English
+
+**DORN AGRO** is a smart irrigation system for small farmers. An **ESP32-S3** board reads soil, air,
+current and battery sensors and drives a nano-bubble pump; an installable **web app (PWA)** controls it in
+real time over **MQTT/TLS (HiveMQ Cloud)**, where every command is **HMAC-SHA256 signed** with a
+per-device key and a rotating challenge. Irrigation rules and safety cut-offs run on the board, so it keeps
+working offline. An **AI assistant** with function calling (Gemini via Firebase AI Logic, user-supplied
+OpenAI/Anthropic keys, local rules as fallback) reads sensors, checks the weather and operates the pump.
+Firmware is built and tested in CI on a simulated ESP32-S3 (Wokwi).
+**[Try the live demo — no account or hardware needed](https://joakovrd-designer.github.io/dorn-agro/app.html?demo).**
